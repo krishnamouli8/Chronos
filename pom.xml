@@ -83,6 +83,40 @@
       <version>1.37</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.12.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- HdrHistogram for accurate latency tracking -->
+    <dependency>
+      <groupId>org.hdrhistogram</groupId>
+      <artifactId>HdrHistogram</artifactId>
+      <version>2.1.12</version>
+    </dependency>
+
+    <!-- SnakeYAML for configuration -->
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.2</version>
+    </dependency>
+
+    <!-- Netty HTTP codec for REST API -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>4.1.108.Final</version>
+    </dependency>
+
+    <!-- Caffeine for high-performance caching utilities -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>3.1.8</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -119,7 +153,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.yourname.jcache.Main</mainClass>
+                  <mainClass>com.krishnamouli.chronos.Main</mainClass>
                 </transformer>
               </transformers>
               <filters>
