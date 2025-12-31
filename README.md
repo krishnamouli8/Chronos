@@ -46,61 +46,6 @@ No need for external monitoring tools. Chronos includes:
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Java 17+
-- Maven 3.6+
-
-### Build & Run
-
-```bash
-# Build executable JAR
-mvn clean package -DskipTests
-
-# Run Chronos
-java -jar target/Chronos-1.0-SNAPSHOT.jar
-
-# Or specify custom Redis port
-java -jar target/Chronos-1.0-SNAPSHOT.jar 6379
-```
-
-### Verify It's Working
-
-**Redis Protocol (port 6380):**
-
-```bash
-redis-cli -p 6380
-
-127.0.0.1:6380> PING
-PONG
-127.0.0.1:6380> SET user:123 "John Doe"
-OK
-127.0.0.1:6380> GET user:123
-"John Doe"
-127.0.0.1:6380> INFO
-# Cache Stats
-hits:1523
-misses:247
-hit_rate:86.05
-```
-
-**HTTP API (port 8080):**
-
-```bash
-# Health check
-curl http://localhost:8080/health
-
-# Prometheus metrics
-curl http://localhost:8080/metrics
-
-# Detailed stats
-curl http://localhost:8080/stats | jq
-```
-
----
-
 ## 📋 Features
 
 ### Core Cache Engine
@@ -171,37 +116,6 @@ curl http://localhost:8080/stats | jq
 │        │ (GZIP, Atomic)  │                      │
 │        └─────────────────┘                      │
 └─────────────────────────────────────────────────┘
-```
-
----
-
-## 🎨 Configuration
-
-Default configuration (all features enabled):
-
-```java
-redis_port: 6380
-http_port: 8080
-max_memory: 1GB
-num_segments: 256
-eviction_policy: LRU
-
-// Intelligence
-enable_prefetching: true
-prefetch_confidence: 0.7
-prefetch_window: 10
-
-enable_adaptive_ttl: true
-ttl_adjustment_interval: 300s
-
-// Persistence
-enable_snapshots: true
-snapshot_interval: 3600s
-snapshot_path: ./data/chronos.snapshot
-
-// Monitoring
-enable_health_monitor: true
-health_check_interval: 60s
 ```
 
 ---
@@ -303,32 +217,6 @@ Chronos/
 
 ---
 
-## 🎯 Roadmap
-
-**Phase 1-3:** ✅ **Complete**
-
-- Core cache engine
-- Redis compatibility
-- Intelligence features (prefetching, adaptive TTL)
-- Monitoring & HTTP API
-- Snapshot persistence
-
-**Phase 4:** 🚧 **Planned**
-
-- React TypeScript dashboard
-- Real-time metrics visualization
-- Access pattern graphs
-- Relationship graph visualization
-
-**Future:**
-
-- Distributed mode (replication, sharding)
-- More ML features (relationship discovery, query caching)
-- WebSocket for real-time dashboard updates
-- Cluster consensus (Raft)
-
----
-
 ## 📄 License
 
 MIT License - see LICENSE file for details
@@ -346,5 +234,3 @@ Contributions welcome! Please open an issue or PR.
 For issues or questions, please open a GitHub issue.
 
 ---
-
-**Built with ❤️ using Java 17, Netty, and production-grade engineering**
