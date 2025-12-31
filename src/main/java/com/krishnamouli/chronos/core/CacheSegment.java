@@ -60,8 +60,7 @@ public class CacheSegment {
     public void put(String key, CacheEntry entry) {
         lock.writeLock().lock();
         try {
-            // Evict proactively if necessary to make room
-            // Calculate required space including the new entry
+            // Calculate required memory including the new entry
             long requiredMemory = entry.getSize();
 
             // Check if key already exists and account for replacement
