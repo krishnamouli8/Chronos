@@ -179,6 +179,27 @@ public class ChronosConfig {
         this.healthCheckIntervalSeconds = healthCheckIntervalSeconds;
     }
 
+    // === Phase 2: Advanced Intelligence Features ===
+
+    // Relationship discovery
+    private boolean enableRelationshipDiscovery = true;
+    private long relationshipWindowMs = 5000; // 5 seconds
+    private double relationshipThreshold = 0.8; // 80% confidence
+
+    // Semantic query caching
+    private boolean enableSemanticCache = true;
+    private double semanticSimilarityThreshold = 0.95; // 95% similarity
+    private int maxSemanticEmbeddings = 10000;
+
+    // A/B testing (off by default - enable when needed)
+    private boolean enableExperiments = false;
+    private int experimentDurationDays = 7;
+
+    // Intelligent cache warming
+    private boolean enableIntelligentWarming = true;
+    private int warmingThreads = 10;
+    private int warmingTopN = 1000;
+
     @Override
     public String toString() {
         return String.format(
