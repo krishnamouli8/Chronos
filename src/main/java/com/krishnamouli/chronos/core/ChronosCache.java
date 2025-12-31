@@ -47,6 +47,11 @@ public class ChronosCache {
                 this.segmentCount, maxMemoryBytes / (1024 * 1024));
     }
 
+    // Convenience constructor for tests (alternative parameter order)
+    public ChronosCache(int segmentCount, EvictionPolicy evictionPolicyTemplate, long maxMemoryBytes) {
+        this(segmentCount, maxMemoryBytes, evictionPolicyTemplate);
+    }
+
     public byte[] get(String key) {
         CacheSegment segment = getSegment(key);
         CacheEntry entry = segment.get(key);
@@ -90,6 +95,21 @@ public class ChronosCache {
             segment.clear();
         }
         logger.info("Cache cleared");
+    }
+
+    // Alias for clear() to match Redis convention
+    public void flushAll() {
+        clear();
+    }
+
+    // Alias for ttl() to match test expectations
+    public long getTTL(String key) {
+        return ttl(key);
+    }
+
+    // Alias for expire() to match test expectations
+    public boolean setExpire(String key, long ttlSeconds) {
+        return expire(key, ttlSeconds);
     }
 
     public CacheStats getStats() {

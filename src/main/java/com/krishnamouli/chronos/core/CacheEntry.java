@@ -64,7 +64,20 @@ public class CacheEntry {
     }
 
     public long getSize() {
-        return size;
+        // Accurate memory accounting including object overhead
+        // Object header: 16 bytes (12 bytes header + 4 bytes padding)
+        // Field references and primitives:
+        // - byte[] value reference: 8 bytes
+        // - long createdAt: 8 bytes
+        // - volatile long expiresAt: 8 bytes
+        // - volatile long lastAccessTime: 8 bytes
+        // - AtomicLong accessCount (object): ~32 bytes (16 header + 8 long + padding)
+        // - long size: 8 bytes
+        // - volatile long computeCostMs: 8 bytes
+        // - volatile int valueHash: 4 bytes
+        // Array header: 16 bytes (12 bytes header + 4 bytes length)
+        // Total overhead: ~116 bytes (rounded to 120 for safety)
+        return 120 + size; // size already contains value.length
     }
 
     public void setComputeCost(long costMs) {

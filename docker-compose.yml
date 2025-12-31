@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  chronos:
+    build: .
+    container_name: chronos-cache
+    ports:
+      - "6380:6380" # Redis protocol
+      - "8080:8080" # HTTP API / Metrics
+      - "9010:9010" # JMX
+    environment:
+      - JAVA_OPTS=-Xmx2g -Xms2g -XX:+UseG1GC
+    volumes:
+      - chronos-data:/app/data
+      - chronos-dumps:/app/heap-dumps
+    networks:
+      - chronos-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: chronos-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    networks:
+      - chronos-network
+    restart: unless-stopped
+    depends_on:
+      - chronos
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: chronos-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    networks:
+      - chronos-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  chronos-data:
+  chronos-dumps:
+  prometheus-data:
+  grafana-data:
+
+
+networks:
+  chronos-network:
+    driver: bridge
