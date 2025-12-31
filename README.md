@@ -1,6 +1,6 @@
 # Chronos - Intelligent Distributed Cache System
 
-> **A production-ready cache with ML-powered prefetching, adaptive TTL, and comprehensive observability**
+> **A production-capable cache with statistical pattern learning, adaptive TTL, and comprehensive observability**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/krishnamouli8/Chronos)
 [![Java](https://img.shields.io/badge/java-17+-blue)](https://adoptium.net/)
@@ -11,11 +11,11 @@
 
 ## 🎯 What Makes Chronos Different?
 
-**Chronos isn't just another cache.** It's a production-ready distributed cache with intelligent features that learn from your access patterns:
+**Chronos isn't just another cache.** It's a production-capable distributed cache with intelligent features that learn from your access patterns:
 
 | Feature           | Traditional Cache | Chronos                                        |
 | ----------------- | ----------------- | ---------------------------------------------- |
-| **Prefetching**   | None or manual    | ML-powered Markov chains (85% accuracy)        |
+| **Prefetching**   | None or manual    | Statistical Markov chains (85% accuracy)       |
 | **TTL**           | Fixed per key     | Adaptive based on access patterns & volatility |
 | **Observability** | External tools    | Built-in Prometheus + Grafana dashboards       |
 | **Eviction**      | Basic LRU/LFU     | Memory-accurate with object overhead tracking  |
@@ -103,9 +103,9 @@ java -jar target/Chronos-1.0-SNAPSHOT.jar
 
 ### Intelligence Features 🧠
 
-#### 1. Predictive Prefetching (Markov Chains)
+#### 1. Predictive Prefetching (Statistical Pattern Learning)
 
-Learns access patterns and preloads data **before** you request it.
+Uses first-order Markov chains to learn access patterns and preload data **before** you request it.
 
 ```
 Example Pattern: profile:user → posts:user → comments:post
@@ -177,7 +177,7 @@ cache.put("session:abc", data, 0);
 │ ┌────────┐ ┌────────┐ ┌────────┐              │
 │ │Markov  │ │Adaptive│ │ Health │              │
 │ │Prefetch│ │  TTL   │ │Monitor │              │
-│ │(85%)   │ │(ML)    │ │(Score) │              │
+│ │(85%)   │ │(Stats) │ │(Score) │              │
 │ └────────┘ └────────┘ └────────┘              │
 │                 │                                │
 │                 ▼                                │
@@ -361,7 +361,7 @@ See [Architecture Decision Records](docs/adr/) for detailed rationale.
 
 ---
 
-## 📈 Production Readiness
+## 📈 Production-Capable Architecture
 
 ✅ **Tested**: 72% test coverage, stress tests, benchmarks  
 ✅ **Monitored**: Prometheus + Grafana integration  

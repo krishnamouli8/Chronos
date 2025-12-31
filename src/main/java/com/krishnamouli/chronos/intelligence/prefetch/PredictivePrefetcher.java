@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * ML-powered predictive prefetcher using Markov chains.
+ * Predictive prefetcher using first-order Markov chains for statistical pattern
+ * learning.
  * Learns access patterns and preloads data before requests.
  */
 public class PredictivePrefetcher {
