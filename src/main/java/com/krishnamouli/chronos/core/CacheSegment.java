@@ -60,22 +60,36 @@ public class CacheSegment {
     public void put(String key, CacheEntry entry) {
         lock.writeLock().lock();
         try {
-            // Remove existing entry if present
+            // Calculate required memory including the new entry
+            long requiredMemory = entry.getSize();
+
+            // Check if key already exists and account for replacement
             CacheEntry existing = entries.get(key);
             if (existing != null) {
-                currentMemoryBytes.addAndGet(-existing.getSize());
-                evictionPolicy.onRemove(key);
+                // We're replacing, so net change is (new - old)
+                requiredMemory -= existing.getSize();
             }
 
-            // Evict if necessary to make room
-            while (currentMemoryBytes.get() + entry.getSize() > maxMemoryBytes && !entries.isEmpty()) {
+            // Evict until we have enough space
+            while (currentMemoryBytes.get() + requiredMemory > maxMemoryBytes && !entries.isEmpty()) {
                 evict();
             }
 
-            // Add new entry
-            entries.put(key, entry);
-            currentMemoryBytes.addAndGet(entry.getSize());
-            evictionPolicy.onAdd(key, entry);
+            // Atomic put operation - this handles both insert and update
+            CacheEntry oldEntry = entries.put(key, entry);
+
+            // Update memory accounting atomically
+            if (oldEntry != null) {
+                // Replace: remove old, add new
+                long delta = entry.getSize() - oldEntry.getSize();
+                currentMemoryBytes.addAndGet(delta);
+                evictionPolicy.onRemove(key);
+                evictionPolicy.onAdd(key, entry);
+            } else {
+                // New entry
+                currentMemoryBytes.addAndGet(entry.getSize());
+                evictionPolicy.onAdd(key, entry);
+            }
 
         } finally {
             lock.writeLock().unlock();

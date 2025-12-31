@@ -64,7 +64,13 @@ public class CacheEntry {
     }
 
     public long getSize() {
-        return size;
+        // Accurate memory accounting including object overhead
+        // Object header: 16 bytes
+        // Field references and primitives: ~72 bytes
+        // Array header: 16 bytes
+        // AtomicLong overhead: ~16 bytes
+        // Total: ~120 bytes + data
+        return 120 + size;
     }
 
     public void setComputeCost(long costMs) {

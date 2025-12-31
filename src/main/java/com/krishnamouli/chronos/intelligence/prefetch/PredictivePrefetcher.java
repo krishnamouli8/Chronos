@@ -29,6 +29,10 @@ public class PredictivePrefetcher {
     private final AtomicInteger predictionsHit = new AtomicInteger(0);
     private final AtomicInteger predictionsMade = new AtomicInteger(0);
 
+    // Predicted keys tracking with timestamps for expiration
+    private final Map<String, Long> predictedKeys = new ConcurrentHashMap<>();
+    private static final long PREDICTION_EXPIRY_MS = 30_000; // 30 seconds
+
     public PredictivePrefetcher(
             ChronosCache cache,
             int windowSize,
@@ -113,14 +117,23 @@ public class PredictivePrefetcher {
     }
 
     private void predictAndPrefetch(String current) {
-        List<String> predictedKeys = predictNextAccess(current);
+        List<String> predicted = predictNextAccess(current);
 
-        if (!predictedKeys.isEmpty()) {
-            predictionsMade.addAndGet(predictedKeys.size());
-            prefetchInBackground(predictedKeys);
+        if (!predicted.isEmpty()) {
+            // Track predictions with timestamp
+            long now = System.currentTimeMillis();
+            for (String key : predicted) {
+                predictedKeys.put(key, now);
+            }
 
-            logger.debug("Predicted {} keys after accessing: {}", predictedKeys.size(), current);
+            predictionsMade.addAndGet(predicted.size());
+            prefetchInBackground(predicted);
+
+            logger.debug("Predicted {} keys after accessing: {}", predicted.size(), current);
         }
+
+        // Clean up expired predictions periodically
+        cleanupExpiredPredictions();
     }
 
     private List<String> predictNextAccess(String current) {
@@ -154,8 +167,20 @@ public class PredictivePrefetcher {
     }
 
     private boolean isPredicted(String key) {
-        // Simple check - in production, maintain a predicted keys set
-        return true; // Simplified for now
+        // Check if key was predicted and remove if found (atomic check-and-remove)
+        Long timestamp = predictedKeys.remove(key);
+        if (timestamp != null) {
+            // Only count as hit if prediction hasn't expired
+            long age = System.currentTimeMillis() - timestamp;
+            return age < PREDICTION_EXPIRY_MS;
+        }
+        return false;
+    }
+
+    private void cleanupExpiredPredictions() {
+        // Remove predictions older than expiry time
+        long cutoff = System.currentTimeMillis() - PREDICTION_EXPIRY_MS;
+        predictedKeys.entrySet().removeIf(entry -> entry.getValue() < cutoff);
     }
 
     /**
