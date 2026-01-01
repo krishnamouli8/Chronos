@@ -102,7 +102,9 @@ public class ExperimentTracker {
      * Returns true if difference is statistically significant at 95% confidence.
      */
     public static boolean isSignificantDifference(List<Double> sample1, List<Double> sample2) {
-        if (sample1.size() < 30 || sample2.size() < 30) {
+        // Require minimum sample size for valid statistical comparison
+        if (sample1.size() < com.krishnamouli.chronos.config.CacheConfiguration.MIN_SAMPLE_SIZE_FOR_STATS ||
+                sample2.size() < com.krishnamouli.chronos.config.CacheConfiguration.MIN_SAMPLE_SIZE_FOR_STATS) {
             return false; // Need sufficient sample size
         }
 
@@ -118,7 +120,8 @@ public class ExperimentTracker {
         }
 
         double tStat = Math.abs(mean1 - mean2) / se;
-        double tCritical = 1.96; // 95% confidence, approximation for large samples
+        // z-score for 95% confidence, two-tailed test
+        double tCritical = com.krishnamouli.chronos.config.CacheConfiguration.T_CRITICAL_95_CONFIDENCE;
 
         return tStat > tCritical;
     }

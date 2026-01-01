@@ -103,7 +103,9 @@ public class RelationshipGraph {
 
         // Prune if needed
         Map<String, AtomicLong> edges = adjacencyList.get(from);
-        if (edges.size() > maxRelationshipsPerKey * 1.2) { // 20% overflow before pruning
+        // Prune when edges exceed threshold (20% buffer before cleanup)
+        if (edges.size() > maxRelationshipsPerKey
+                * com.krishnamouli.chronos.config.CacheConfiguration.RELATIONSHIP_PRUNING_THRESHOLD) {
             pruneRelationships(from);
         }
     }

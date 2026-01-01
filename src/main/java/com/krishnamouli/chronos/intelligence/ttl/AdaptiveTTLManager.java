@@ -119,7 +119,8 @@ public class AdaptiveTTLManager {
      */
     private static class VolatilityEstimator {
         private final Map<String, ChangeHistory> histories = new ConcurrentHashMap<>();
-        private static final int MAX_HISTORY = 10;
+        // Max history size balances memory usage vs accuracy of volatility estimates
+        private static final int MAX_HISTORY = com.krishnamouli.chronos.config.CacheConfiguration.VOLATILITY_MAX_HISTORY;
 
         public void recordChange(String key) {
             histories.computeIfAbsent(key, k -> new ChangeHistory())

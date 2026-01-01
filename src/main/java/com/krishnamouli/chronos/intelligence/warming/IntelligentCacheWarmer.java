@@ -63,8 +63,11 @@ public class IntelligentCacheWarmer {
 
             // Estimate compute cost and size from current cache entry if available
             CacheEntry cacheEntry = cache.getEntry(key);
-            long computeCost = cacheEntry != null ? cacheEntry.getComputeCost() : 10; // default 10ms
-            long size = cacheEntry != null ? cacheEntry.getSize() : 1024; // default 1KB
+            // Use defaults if entry metadata not available
+            long computeCost = cacheEntry != null ? cacheEntry.getComputeCost()
+                    : com.krishnamouli.chronos.config.CacheConfiguration.DEFAULT_COMPUTE_COST_MS;
+            long size = cacheEntry != null ? cacheEntry.getSize()
+                    : com.krishnamouli.chronos.config.CacheConfiguration.DEFAULT_ENTRY_SIZE_BYTES;
 
             recommendations.add(new WarmingRecommendation(key, frequency, computeCost, size));
         }
@@ -133,7 +136,9 @@ public class IntelligentCacheWarmer {
             int failed = 0;
             for (CompletableFuture<Boolean> task : tasks) {
                 try {
-                    if (task.get(30, TimeUnit.SECONDS)) {
+                    // Wait for warming task with reasonable timeout
+                    if (task.get(com.krishnamouli.chronos.config.CacheConfiguration.WARMING_TASK_TIMEOUT_SECONDS,
+                            TimeUnit.SECONDS)) {
                         succeeded++;
                     } else {
                         failed++;

@@ -66,7 +66,11 @@ public class HTTPApiHandler extends SimpleChannelInboundHandler<FullHttpRequest>
 
         Map<String, Object> data = new HashMap<>();
         data.put("score", report.getScore());
-        data.put("status", report.getScore() > 70 ? "healthy" : "degraded");
+        // Score >70 indicates healthy cache performance
+        data.put("status",
+                report.getScore() > com.krishnamouli.chronos.config.CacheConfiguration.HEALTHY_SCORE_THRESHOLD
+                        ? "healthy"
+                        : "degraded");
         data.put("issues", report.getIssues());
 
         return createJsonResponse(HttpResponseStatus.OK, data);

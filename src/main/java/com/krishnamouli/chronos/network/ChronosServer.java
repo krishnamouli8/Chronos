@@ -38,7 +38,9 @@ public class ChronosServer {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, 128)
+                    // TCP backlog for incoming connections
+                    .option(ChannelOption.SO_BACKLOG,
+                            com.krishnamouli.chronos.config.CacheConfiguration.TCP_BACKLOG_SIZE)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childHandler(new ChannelInitializer<SocketChannel>() {

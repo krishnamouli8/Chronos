@@ -32,7 +32,8 @@ public class PredictivePrefetcher {
 
     // Predicted keys tracking with timestamps for expiration
     private final Map<String, Long> predictedKeys = new ConcurrentHashMap<>();
-    private static final long PREDICTION_EXPIRY_MS = 30_000; // 30 seconds
+    // Predictions expire after 30 seconds to prevent stale predictions
+    private static final long PREDICTION_EXPIRY_MS = com.krishnamouli.chronos.config.CacheConfiguration.PREDICTION_EXPIRY_MS;
 
     public PredictivePrefetcher(
             ChronosCache cache,
@@ -111,8 +112,10 @@ public class PredictivePrefetcher {
 
     private void updateTransitionProbabilities(List<String> history, String current) {
         for (String prev : history) {
+            // Initial capacity handles typical branching patterns without resize
             transitionMatrix
-                    .computeIfAbsent(prev, k -> new ProbabilityMap(100))
+                    .computeIfAbsent(prev, k -> new ProbabilityMap(
+                            com.krishnamouli.chronos.config.CacheConfiguration.PROBABILITY_MAP_INITIAL_CAPACITY))
                     .increment(current);
         }
     }
