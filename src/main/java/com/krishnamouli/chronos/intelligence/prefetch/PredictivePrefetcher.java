@@ -26,9 +26,11 @@ public class PredictivePrefetcher {
     private final ExecutorService prefetchExecutor;
     private final DataLoader dataLoader;
 
-    // Metrics
+    // Metrics for prefetch performance tracking
     private final AtomicInteger predictionsHit = new AtomicInteger(0);
     private final AtomicInteger predictionsMade = new AtomicInteger(0);
+    // Track prefetch failures for monitoring and debugging
+    private final AtomicInteger prefetchFailures = new AtomicInteger(0);
 
     // Predicted keys tracking with timestamps for expiration
     private final Map<String, Long> predictedKeys = new ConcurrentHashMap<>();
@@ -89,6 +91,24 @@ public class PredictivePrefetcher {
     public double getPrefetchAccuracy() {
         int made = predictionsMade.get();
         return made == 0 ? 0.0 : (double) predictionsHit.get() / made;
+    }
+
+    /**
+     * Get count of prefetch failures for monitoring.
+     * Failures occur when data loader throws exception or returns null.
+     */
+    public int getPrefetchFailures() {
+        return prefetchFailures.get();
+    }
+
+    /**
+     * Get prefetch success rate (excluding failures).
+     */
+    public double getPrefetchSuccessRate() {
+        int made = predictionsMade.get();
+        int failures = prefetchFailures.get();
+        int attempted = made; // Predictions that were attempted
+        return attempted == 0 ? 0.0 : 1.0 - ((double) failures / attempted);
     }
 
     public void shutdown() {
@@ -161,9 +181,15 @@ public class PredictivePrefetcher {
                         if (data != null) {
                             cache.put(key, data, 0); // Use default TTL
                             logger.debug("Prefetched key: {}", key);
+                        } else {
+                            // Data loader returned null - count as failure
+                            prefetchFailures.incrementAndGet();
+                            logger.debug("Prefetch failed (null data): {}", key);
                         }
                     }
                 } catch (Exception e) {
+                    // Exception during prefetch - count as failure
+                    prefetchFailures.incrementAndGet();
                     logger.warn("Failed to prefetch key: {}", key, e);
                 }
             });
