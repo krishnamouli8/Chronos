@@ -16,10 +16,10 @@ import java.util.concurrent.*;
 public class AdaptiveTTLManager {
     private static final Logger logger = LoggerFactory.getLogger(AdaptiveTTLManager.class);
 
-    private static final long BASE_TTL_SECONDS = 3600; // 1 hour baseline
-    private static final double MIN_MULTIPLIER = 0.1;
-    private static final double MAX_MULTIPLIER = 10.0;
-    private static final double ADJUSTMENT_THRESHOLD = 0.2; // 20% difference to adjust
+    private static final long BASE_TTL_SECONDS = com.krishnamouli.chronos.config.CacheConfiguration.BASE_TTL_SECONDS;
+    private static final double MIN_MULTIPLIER = com.krishnamouli.chronos.config.CacheConfiguration.MIN_TTL_MULTIPLIER;
+    private static final double MAX_MULTIPLIER = com.krishnamouli.chronos.config.CacheConfiguration.MAX_TTL_MULTIPLIER;
+    private static final double ADJUSTMENT_THRESHOLD = com.krishnamouli.chronos.config.CacheConfiguration.TTL_ADJUSTMENT_THRESHOLD;
 
     private final ChronosCache cache;
     private final VolatilityEstimator volatilityEstimator;
@@ -119,7 +119,8 @@ public class AdaptiveTTLManager {
      */
     private static class VolatilityEstimator {
         private final Map<String, ChangeHistory> histories = new ConcurrentHashMap<>();
-        private static final int MAX_HISTORY = 10;
+        // Max history size balances memory usage vs accuracy of volatility estimates
+        private static final int MAX_HISTORY = com.krishnamouli.chronos.config.CacheConfiguration.VOLATILITY_MAX_HISTORY;
 
         public void recordChange(String key) {
             histories.computeIfAbsent(key, k -> new ChangeHistory())

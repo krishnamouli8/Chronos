@@ -21,7 +21,8 @@ public class VariantAssigner {
         for (double split : trafficSplit) {
             sum += split;
         }
-        if (Math.abs(sum - 1.0) > 0.01) {
+        // Allow for floating-point rounding errors
+        if (Math.abs(sum - 1.0) > com.krishnamouli.chronos.config.CacheConfiguration.VARIANT_WEIGHT_SUM_TOLERANCE) {
             throw new IllegalArgumentException("Traffic split must sum to 1.0");
         }
 
@@ -39,7 +40,10 @@ public class VariantAssigner {
 
         // Hash-based deterministic assignment
         int hash = sessionId.hashCode();
-        double normalized = (double) (Math.abs(hash) % 10000) / 10000.0;
+        // Normalize hash to 0.0-1.0 range for fine-grained assignment
+        double normalized = (double) (Math.abs(hash)
+                % com.krishnamouli.chronos.config.CacheConfiguration.HASH_NORMALIZATION_MODULO) /
+                (double) com.krishnamouli.chronos.config.CacheConfiguration.HASH_NORMALIZATION_MODULO;
 
         // Find bucket based on traffic split
         double cumulative = 0.0;

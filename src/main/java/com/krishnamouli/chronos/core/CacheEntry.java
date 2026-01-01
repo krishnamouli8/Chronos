@@ -64,12 +64,27 @@ public class CacheEntry {
     }
 
     public long getSize() {
-        // Accurate memory accounting including object overhead
-        // Object header: 16 bytes
-        // Field references and primitives: ~72 bytes
-        // Array header: 16 bytes
-        // AtomicLong overhead: ~16 bytes
-        // Total: ~120 bytes + data
+        // Memory accounting calculation
+        //
+        // ASSUMPTIONS (64-bit JVM with CompressedOOPs enabled):
+        // - Object header: 16 bytes (12 bytes mark+klass, 4 bytes padding)
+        // - Field references (6 × 8 bytes): 48 bytes (compressed to 4 bytes each = 24,
+        // but assume 48 for safety)
+        // - Primitive fields (3 × long = 24 bytes)
+        // - Array header: 16 bytes
+        // - AtomicLong object: 24 bytes (object + long value + padding)
+        // Total overhead: ~120 bytes
+        //
+        // WARNING: This breaks on:
+        // - 32-bit JVM (different object layout)
+        // - -XX:-UseCompressedOops (8-byte references instead of 4-byte)
+        // - Exotic JVMs (J9, Azul, etc may have different layouts)
+        //
+        // For truly accurate sizing, use
+        // java.lang.instrument.Instrumentation.getObjectSize()
+        // but that requires -javaagent which adds complexity.
+        //
+        // Reference: https://www.baeldung.com/java-size-of-object
         return 120 + size;
     }
 

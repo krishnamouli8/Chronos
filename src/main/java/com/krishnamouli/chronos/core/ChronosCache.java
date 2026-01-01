@@ -64,6 +64,29 @@ public class ChronosCache {
     }
 
     public void put(String key, byte[] value, long ttlSeconds) {
+        // Input validation as per security review
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("Key cannot be null or empty");
+        }
+        if (key.getBytes().length > com.krishnamouli.chronos.config.CacheConfiguration.MAX_KEY_LENGTH_BYTES) {
+            throw new IllegalArgumentException(
+                    String.format("Key too long: %d bytes (max: %d)",
+                            key.getBytes().length,
+                            com.krishnamouli.chronos.config.CacheConfiguration.MAX_KEY_LENGTH_BYTES));
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("Value cannot be null");
+        }
+        if (value.length > com.krishnamouli.chronos.config.CacheConfiguration.MAX_VALUE_SIZE_BYTES) {
+            throw new IllegalArgumentException(
+                    String.format("Value too large: %d bytes (max: %d)",
+                            value.length,
+                            com.krishnamouli.chronos.config.CacheConfiguration.MAX_VALUE_SIZE_BYTES));
+        }
+        if (ttlSeconds < 0) {
+            throw new IllegalArgumentException("TTL cannot be negative");
+        }
+
         CacheEntry entry = new CacheEntry(value, ttlSeconds);
         CacheSegment segment = getSegment(key);
         segment.put(key, entry);

@@ -20,7 +20,9 @@ public class SemanticQueryCache {
 
     public SemanticQueryCache(double similarityThreshold, int maxEmbeddings) {
         this.exactCache = new ConcurrentHashMap<>();
-        this.embedder = new TFIDFEmbedder(10000); // 10K vocab
+        // TF-IDF embedder with configurable vocabulary size
+        this.embedder = new TFIDFEmbedder(
+                com.krishnamouli.chronos.config.CacheConfiguration.TFIDF_VOCABULARY_SIZE);
         this.similarityThreshold = similarityThreshold;
         this.maxEmbeddings = maxEmbeddings;
 
@@ -125,7 +127,11 @@ public class SemanticQueryCache {
     }
 
     private String truncate(String str) {
-        return str.length() > 50 ? str.substring(0, 47) + "..." : str;
+        // Truncate long strings for readable logging
+        return str.length() > com.krishnamouli.chronos.config.CacheConfiguration.STRING_TRUNCATE_LENGTH
+                ? str.substring(0, com.krishnamouli.chronos.config.CacheConfiguration.STRING_TRUNCATE_LENGTH -
+                        com.krishnamouli.chronos.config.CacheConfiguration.TRUNCATE_SUFFIX_LENGTH) + "..."
+                : str;
     }
 
     private static class CachedQuery {

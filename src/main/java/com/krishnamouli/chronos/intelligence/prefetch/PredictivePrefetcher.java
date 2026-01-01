@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * ML-powered predictive prefetcher using Markov chains.
+ * Predictive prefetcher using first-order Markov chains for statistical pattern
+ * learning.
  * Learns access patterns and preloads data before requests.
  */
 public class PredictivePrefetcher {
@@ -25,13 +26,16 @@ public class PredictivePrefetcher {
     private final ExecutorService prefetchExecutor;
     private final DataLoader dataLoader;
 
-    // Metrics
+    // Metrics for prefetch performance tracking
     private final AtomicInteger predictionsHit = new AtomicInteger(0);
     private final AtomicInteger predictionsMade = new AtomicInteger(0);
+    // Track prefetch failures for monitoring and debugging
+    private final AtomicInteger prefetchFailures = new AtomicInteger(0);
 
     // Predicted keys tracking with timestamps for expiration
     private final Map<String, Long> predictedKeys = new ConcurrentHashMap<>();
-    private static final long PREDICTION_EXPIRY_MS = 30_000; // 30 seconds
+    // Predictions expire after 30 seconds to prevent stale predictions
+    private static final long PREDICTION_EXPIRY_MS = com.krishnamouli.chronos.config.CacheConfiguration.PREDICTION_EXPIRY_MS;
 
     public PredictivePrefetcher(
             ChronosCache cache,
@@ -89,6 +93,24 @@ public class PredictivePrefetcher {
         return made == 0 ? 0.0 : (double) predictionsHit.get() / made;
     }
 
+    /**
+     * Get count of prefetch failures for monitoring.
+     * Failures occur when data loader throws exception or returns null.
+     */
+    public int getPrefetchFailures() {
+        return prefetchFailures.get();
+    }
+
+    /**
+     * Get prefetch success rate (excluding failures).
+     */
+    public double getPrefetchSuccessRate() {
+        int made = predictionsMade.get();
+        int failures = prefetchFailures.get();
+        int attempted = made; // Predictions that were attempted
+        return attempted == 0 ? 0.0 : 1.0 - ((double) failures / attempted);
+    }
+
     public void shutdown() {
         logger.info("Prefetch executor shutting down");
         prefetchExecutor.shutdown();
@@ -110,8 +132,10 @@ public class PredictivePrefetcher {
 
     private void updateTransitionProbabilities(List<String> history, String current) {
         for (String prev : history) {
+            // Initial capacity handles typical branching patterns without resize
             transitionMatrix
-                    .computeIfAbsent(prev, k -> new ProbabilityMap(100))
+                    .computeIfAbsent(prev, k -> new ProbabilityMap(
+                            com.krishnamouli.chronos.config.CacheConfiguration.PROBABILITY_MAP_INITIAL_CAPACITY))
                     .increment(current);
         }
     }
@@ -157,9 +181,15 @@ public class PredictivePrefetcher {
                         if (data != null) {
                             cache.put(key, data, 0); // Use default TTL
                             logger.debug("Prefetched key: {}", key);
+                        } else {
+                            // Data loader returned null - count as failure
+                            prefetchFailures.incrementAndGet();
+                            logger.debug("Prefetch failed (null data): {}", key);
                         }
                     }
                 } catch (Exception e) {
+                    // Exception during prefetch - count as failure
+                    prefetchFailures.incrementAndGet();
                     logger.warn("Failed to prefetch key: {}", key, e);
                 }
             });

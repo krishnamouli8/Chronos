@@ -23,7 +23,9 @@ public class RelationshipDiscovery {
 
     public RelationshipDiscovery(ChronosCache cache, long windowMs, double cascadeThreshold) {
         this.cache = cache;
-        this.graph = new RelationshipGraph(1000); // max 1000 relationships per key
+        this.graph = new RelationshipGraph(
+                com.krishnamouli.chronos.config.CacheConfiguration.MAX_RELATIONSHIPS_PER_KEY); // Prevents unbounded
+                                                                                               // graph growth
         this.sessionWindows = new ConcurrentHashMap<>();
         this.windowMs = windowMs;
         this.cascadeThreshold = cascadeThreshold;
@@ -55,7 +57,8 @@ public class RelationshipDiscovery {
         window.addAccess(key, now);
 
         // Clean up old sessions periodically
-        if (sessionWindows.size() > 10000) {
+        // Limit memory usage by pruning old sessions
+        if (sessionWindows.size() > com.krishnamouli.chronos.config.CacheConfiguration.MAX_SESSION_WINDOWS) {
             cleanupOldSessions(now);
         }
     }
@@ -99,7 +102,9 @@ public class RelationshipDiscovery {
     private void cleanupOldSessions(long now) {
         sessionWindows.entrySet().removeIf(entry -> {
             SessionWindow window = entry.getValue();
-            return now - window.getLastAccessTime() > windowMs * 10; // 10x window
+            // Session expires after 10x the normal window duration
+            return now - window.getLastAccessTime() > windowMs
+                    * com.krishnamouli.chronos.config.CacheConfiguration.SESSION_WINDOW_EXPIRY_MULTIPLIER;
         });
     }
 
@@ -117,7 +122,8 @@ public class RelationshipDiscovery {
             accesses.addLast(new AccessRecord(key, timestamp));
 
             // Keep window bounded
-            if (accesses.size() > 100) {
+            // Limit accesses per window to prevent memory bloat
+            if (accesses.size() > com.krishnamouli.chronos.config.CacheConfiguration.MAX_ACCESSES_PER_WINDOW) {
                 accesses.removeFirst();
             }
         }

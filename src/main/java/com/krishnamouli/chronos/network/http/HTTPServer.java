@@ -52,7 +52,9 @@ public class HTTPServer {
                         protected void initChannel(SocketChannel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new HttpServerCodec());
-                            pipeline.addLast(new HttpObjectAggregator(65536));
+                            // Max request size to prevent DoS
+                            pipeline.addLast(new HttpObjectAggregator(
+                                    com.krishnamouli.chronos.config.CacheConfiguration.HTTP_MAX_CONTENT_LENGTH));
                             pipeline.addLast(new HTTPApiHandler(cache, metrics, healthMonitor));
                         }
                     });
